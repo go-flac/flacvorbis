@@ -37,7 +37,7 @@ func addFLACTitle(fileName string, title []byte) {
 }
 ```
 
-The following example extracts existing tags from a FLAC file. It returnt the last vorbis comment block and also the corresponding index of the metadata, which could be used for updating later on.
+The following example extracts existing tags from a FLAC file. It returns the last vorbis comment block and also the corresponding index of the metadata, which could be used for updating later on.
 ```golang
 package example
 
