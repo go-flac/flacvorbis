@@ -8,8 +8,7 @@ FLAC vorbis comment metablock manipulation for [go-flac](https://www.github.com/
 
 ## Examples
 
-The following example adds a title to the FLAC metadata. Only add a new entry if you are sure there is none existing, otherwise will mislead some audio players.
-
+The following example adds a title to the FLAC metadata. It considers whether there is already an existing vorbis comment block and updates it accordingly or otherwise creates a new one. Only add a new entry if you are sure there is none existing, multiple entries can be misleading for some audio players.
 ```golang
 package example
 
@@ -23,37 +22,17 @@ func addFLACTitle(fileName string, title []byte) {
 	if err != nil {
 		panic(err)
 	}
-	cmts := flacvorbis.New()
-	cmts.Add(flacvorbis.FIELD_TITLE, title)
-	cmtsmeta := cmts.Marshal()
-	f.Meta = append(f.Meta, &cmtsmeta)
-	f.Save(fileName)
-}
-```
-
-The following example checks for an existing vorbis comment block and updates it with a title to the FLAC metadata.
-
-```golang
-package example
-
-import (
-    "github.com/go-flac/flacvorbis"
-    "github.com/go-flac/go-flac"
-)
-
-func updateFLACTitle(fileName string, title []byte) {
-	f, err := flac.ParseFile(fileName)
-	if err != nil {
-		panic(err)
-	}
 	cmts, idx := extractFLACComment(f)
-	if err != nil {
-		panic err
+	if cmts == nil && idx > 0 {
+		cmts := flacvorbis.New()
 	}
 	cmts.Add(flacvorbis.FIELD_TITLE, title)
 	cmtsmeta := cmts.Marshal()
-	// Replace existing Metadata with the modified one
-	f.Meta[idx] = &cmtsmeta
+	if idx > 0 {	
+		f.Meta[idx] = &cmtsmeta
+	} else {
+		f.Meta = append(f.Meta, &cmtsmeta)
+	}
 	f.Save(fileName)
 }
 ```
