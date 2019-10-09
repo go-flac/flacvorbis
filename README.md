@@ -54,7 +54,7 @@ func addFLACTitle(fileName string, title []byte) {
 	}
 	cmts, idx := extractFLACComment(f)
 	if cmts == nil && idx > 0 {
-		cmts := flacvorbis.New()
+		cmts = flacvorbis.New()
 	}
 	cmts.Add(flacvorbis.FIELD_TITLE, title)
 	cmtsmeta := cmts.Marshal()
