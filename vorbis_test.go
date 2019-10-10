@@ -55,14 +55,22 @@ func TestVorbisFromExistingFlac(t *testing.T) {
 	}
 
 	var cmt *MetaDataBlockVorbisComment
-	for _, meta := range f.Meta {
+	var cmtIdx int
+	for idx, meta := range f.Meta {
 		if meta.Type == flac.VorbisComment {
 			cmt, err = ParseFromMetaDataBlock(*meta)
+			cmtIdx = idx
 			if err != nil {
 				t.Errorf("Error while parsing metadata image: %s\n", err.Error())
 				t.Fail()
 			}
 		}
+	}
+
+	cmt.Add(FIELD_GENRE, "Bee Pop")
+	cmtsmeta := cmt.Marshal()
+	if cmtIdx > 0 {
+		f.Meta[cmtIdx] = &cmtsmeta
 	}
 
 	check := func(cmt *MetaDataBlockVorbisComment) {
@@ -83,6 +91,22 @@ func TestVorbisFromExistingFlac(t *testing.T) {
 			t.Fail()
 		} else if len(res) != 1 || res[0] != "Blue Monday FM" {
 			t.Error("Unexpected artist name: ", res)
+			t.Fail()
+		}
+
+		if res, err := cmt.Get(FIELD_TITLE); err != nil {
+			t.Error(err)
+			t.Fail()
+		} else if len(res) != 1 || res[0] != "Bee Moved" {
+			t.Error("Unexpected title name: ", res)
+			t.Fail()
+		}
+
+		if res, err := cmt.Get(FIELD_GENRE); err != nil {
+			t.Error(err)
+			t.Fail()
+		} else if len(res) != 1 || res[0] != "Bee Pop" {
+			t.Error("Unexpected title name: ", res)
 			t.Fail()
 		}
 	}
