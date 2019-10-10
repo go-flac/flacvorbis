@@ -55,11 +55,9 @@ func TestVorbisFromExistingFlac(t *testing.T) {
 	}
 
 	var cmt *MetaDataBlockVorbisComment
-	var cmtIdx int
-	for idx, meta := range f.Meta {
+	for _, meta := range f.Meta {
 		if meta.Type == flac.VorbisComment {
 			cmt, err = ParseFromMetaDataBlock(*meta)
-			cmtIdx = idx
 			if err != nil {
 				t.Errorf("Error while parsing metadata image: %s\n", err.Error())
 				t.Fail()
@@ -68,10 +66,6 @@ func TestVorbisFromExistingFlac(t *testing.T) {
 	}
 
 	cmt.Add(FIELD_GENRE, "Bee Pop")
-	cmtsmeta := cmt.Marshal()
-	if cmtIdx > 0 {
-		f.Meta[cmtIdx] = &cmtsmeta
-	}
 
 	check := func(cmt *MetaDataBlockVorbisComment) {
 		if cmt.Vendor != "reference libFLAC 1.2.1 win64 20080709" {
