@@ -65,6 +65,11 @@ func TestVorbisFromExistingFlac(t *testing.T) {
 		}
 	}
 
+	if err := cmt.Add(FIELD_GENRE, "Bee Pop"); err != nil {
+		t.Error(err)
+		t.Fail()
+	}
+
 	check := func(cmt *MetaDataBlockVorbisComment) {
 		if cmt.Vendor != "reference libFLAC 1.2.1 win64 20080709" {
 			t.Errorf("Unexpected vendor string: %s\n", cmt.Vendor)
@@ -83,6 +88,22 @@ func TestVorbisFromExistingFlac(t *testing.T) {
 			t.Fail()
 		} else if len(res) != 1 || res[0] != "Blue Monday FM" {
 			t.Error("Unexpected artist name: ", res)
+			t.Fail()
+		}
+
+		if res, err := cmt.Get(FIELD_TITLE); err != nil {
+			t.Error(err)
+			t.Fail()
+		} else if len(res) != 1 || res[0] != "Bee Moved" {
+			t.Error("Unexpected title name: ", res)
+			t.Fail()
+		}
+
+		if res, err := cmt.Get(FIELD_GENRE); err != nil {
+			t.Error(err)
+			t.Fail()
+		} else if len(res) != 1 || res[0] != "Bee Pop" {
+			t.Error("Unexpected title name: ", res)
 			t.Fail()
 		}
 	}
