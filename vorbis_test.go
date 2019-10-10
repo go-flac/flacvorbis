@@ -65,7 +65,10 @@ func TestVorbisFromExistingFlac(t *testing.T) {
 		}
 	}
 
-	cmt.Add(FIELD_GENRE, "Bee Pop")
+	if err := cmt.Add(FIELD_GENRE, "Bee Pop"); err != nil {
+		t.Error(err)
+		t.Fail()
+	}
 
 	check := func(cmt *MetaDataBlockVorbisComment) {
 		if cmt.Vendor != "reference libFLAC 1.2.1 win64 20080709" {
