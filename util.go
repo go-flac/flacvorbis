@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"io"
-	"strings"
 )
 
 func encodeUint32(n uint32) []byte {
@@ -24,19 +23,4 @@ func packStr(w io.Writer, s string) {
 	data := []byte(s)
 	w.Write(encodeUint32(uint32(len(data))))
 	w.Write(data)
-}
-
-func packMapValue(m map[string]string, key string, value string, sep string) {
-	if xval, exists := m[key]; exists {
-		m[key] = strings.Join([]string{xval, value}, sep)
-	} else {
-		m[key] = value
-	}
-}
-
-func unpackMapValue(m map[string]string, key string, sep string) []string {
-	if xval, exists := m[key]; exists {
-		return strings.Split(xval, sep)
-	}
-	return []string{}
 }

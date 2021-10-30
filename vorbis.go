@@ -9,7 +9,7 @@ import (
 
 type MetaDataBlockVorbisComment struct {
 	Vendor   string
-	Comments map[string]string
+	Comments map[string][]string
 }
 
 // New creates a new MetaDataBlockVorbisComment
@@ -17,14 +17,17 @@ type MetaDataBlockVorbisComment struct {
 func New() *MetaDataBlockVorbisComment {
 	return &MetaDataBlockVorbisComment{
 		"flacvorbis " + APP_VERSION,
-		make(map[string]string),
+		make(map[string][]string),
 	}
 }
 
 // Get get all comments with field name specified by the key parameter
 // If there is no match, error would still be nil
 func (c *MetaDataBlockVorbisComment) Get(key string) ([]string, error) {
-	return unpackMapValue(c.Comments, key, ";"), nil
+	if value, exists := c.Comments[key]; exists {
+		return value, nil
+	}
+	return []string{}, nil
 }
 
 // Add adds a key-val pair to the comments
@@ -34,7 +37,11 @@ func (c *MetaDataBlockVorbisComment) Add(key string, val string) error {
 			return ErrorInvalidFieldName
 		}
 	}
-	packMapValue(c.Comments, key, val, ";")
+	if xval, exists := c.Comments[key]; exists {
+		c.Comments[key] = append(xval, val)
+	} else {
+		c.Comments[key] = []string{val}
+	}
 	return nil
 }
 
@@ -43,8 +50,10 @@ func (c MetaDataBlockVorbisComment) Marshal() flac.MetaDataBlock {
 	data := bytes.NewBuffer([]byte{})
 	packStr(data, c.Vendor)
 	data.Write(encodeUint32(uint32(len(c.Comments))))
-	for _, cmt := range c.Comments {
-		packStr(data, cmt)
+	for key, values := range c.Comments {
+		for _, value := range values {
+			packStr(data, key+"="+value)
+		}
 	}
 	return flac.MetaDataBlock{
 		Type: flac.VorbisComment,
@@ -79,8 +88,9 @@ func ParseFromMetaDataBlock(meta flac.MetaDataBlock) (*MetaDataBlockVorbisCommen
 	if err != nil {
 		return nil, err
 	}
-	res.Comments = make(map[string]string, cmtcount)
-	for range res.Comments {
+	res.Comments = make(map[string][]string, cmtcount)
+	var i uint32
+	for i = 0; i < cmtcount; i++ {
 		cmtlen, err := readUint32(reader)
 		if err != nil {
 			return nil, err
@@ -98,8 +108,8 @@ func ParseFromMetaDataBlock(meta flac.MetaDataBlock) (*MetaDataBlockVorbisCommen
 			return nil, ErrorMalformedComment
 		}
 
-		key, value := p[0], p[1]
-		packMapValue(res.Comments, key, value, ";")
+		key, val := p[0], p[1]
+		res.Add(key, val)
 	}
 	return res, nil
 }
