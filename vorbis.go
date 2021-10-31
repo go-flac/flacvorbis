@@ -9,7 +9,7 @@ import (
 
 type MetaDataBlockVorbisComment struct {
 	Vendor   string
-	Comments []string
+	Comments map[string][]string
 }
 
 // New creates a new MetaDataBlockVorbisComment
@@ -17,34 +17,45 @@ type MetaDataBlockVorbisComment struct {
 func New() *MetaDataBlockVorbisComment {
 	return &MetaDataBlockVorbisComment{
 		"flacvorbis " + APP_VERSION,
-		[]string{},
+		make(map[string][]string),
 	}
 }
 
-// Get get all comments with field name specified by the key parameter
-// If there is no match, error would still be nil
+// Gets the values of a tag if it exists, or an
+// empty list if the tag is not present. If there
+// is no tag, error would still be nil
 func (c *MetaDataBlockVorbisComment) Get(key string) ([]string, error) {
-	res := make([]string, 0)
-	for _, cmt := range c.Comments {
-		p := strings.SplitN(cmt, "=", 2)
-		if len(p) != 2 {
-			return nil, ErrorMalformedComment
-		}
-		if strings.EqualFold(p[0], key) {
-			res = append(res, p[1])
-		}
+	if value, exists := c.Comments[strings.ToUpper(key)]; exists {
+		return value, nil
 	}
-	return res, nil
+	return []string{}, nil
 }
 
-// Add adds a key-val pair to the comments
+// Add adds a value to an existing tag, or sets the tag if not present
 func (c *MetaDataBlockVorbisComment) Add(key string, val string) error {
-	for _, char := range key {
+	stdKey := strings.ToUpper(key)
+	for _, char := range stdKey {
 		if char < 0x20 || char > 0x7d || char == '=' {
 			return ErrorInvalidFieldName
 		}
 	}
-	c.Comments = append(c.Comments, key+"="+val)
+	if xval, exists := c.Comments[stdKey]; exists {
+		c.Comments[stdKey] = append(xval, val)
+	} else {
+		c.Comments[stdKey] = []string{val}
+	}
+	return nil
+}
+
+// Sets sets a new tag or replaces replaces the value of a existing tag
+func (c *MetaDataBlockVorbisComment) Set(key string, val []string) error {
+	stdKey := strings.ToUpper(key)
+	for _, char := range stdKey {
+		if char < 0x20 || char > 0x7d || char == '=' {
+			return ErrorInvalidFieldName
+		}
+	}
+	c.Comments[stdKey] = val
 	return nil
 }
 
@@ -53,8 +64,10 @@ func (c MetaDataBlockVorbisComment) Marshal() flac.MetaDataBlock {
 	data := bytes.NewBuffer([]byte{})
 	packStr(data, c.Vendor)
 	data.Write(encodeUint32(uint32(len(c.Comments))))
-	for _, cmt := range c.Comments {
-		packStr(data, cmt)
+	for key, values := range c.Comments {
+		for _, value := range values {
+			packStr(data, key+"="+value)
+		}
 	}
 	return flac.MetaDataBlock{
 		Type: flac.VorbisComment,
@@ -89,8 +102,9 @@ func ParseFromMetaDataBlock(meta flac.MetaDataBlock) (*MetaDataBlockVorbisCommen
 	if err != nil {
 		return nil, err
 	}
-	res.Comments = make([]string, cmtcount)
-	for i := range res.Comments {
+	res.Comments = make(map[string][]string, cmtcount)
+	var i uint32
+	for i = 0; i < cmtcount; i++ {
 		cmtlen, err := readUint32(reader)
 		if err != nil {
 			return nil, err
@@ -103,7 +117,13 @@ func ParseFromMetaDataBlock(meta flac.MetaDataBlock) (*MetaDataBlockVorbisCommen
 		if nn != int(cmtlen) {
 			return nil, ErrorUnexpEof
 		}
-		res.Comments[i] = string(cmtbytes)
+		p := strings.SplitN(string(cmtbytes), "=", 2)
+		if len(p) != 2 {
+			return nil, ErrorMalformedComment
+		}
+
+		key, val := p[0], p[1]
+		res.Add(key, val)
 	}
 	return res, nil
 }

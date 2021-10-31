@@ -3,12 +3,28 @@ package flacvorbis
 import (
 	"archive/zip"
 	"bytes"
+	"io/ioutil"
+	"net/http"
 	"strings"
 	"testing"
 
-	httpclient "github.com/ddliu/go-httpclient"
 	flac "github.com/go-flac/go-flac"
 )
+
+func downloadFile(url string) ([]byte, error) {
+
+	// Get the data
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	res, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
 
 func TestNewVorbisComment(t *testing.T) {
 	cmt := New()
@@ -22,12 +38,7 @@ func TestNewVorbisComment(t *testing.T) {
 	}
 }
 func TestVorbisFromExistingFlac(t *testing.T) {
-	zipres, err := httpclient.Begin().Get("http://helpguide.sony.net/high-res/sample1/v1/data/Sample_BeeMoved_96kHz24bit.flac.zip")
-	if err != nil {
-		t.Errorf("Error while downloading test file: %s", err.Error())
-		t.FailNow()
-	}
-	zipdata, err := zipres.ReadAll()
+	zipdata, err := downloadFile("http://helpguide.sony.net/high-res/sample1/v1/data/Sample_BeeMoved_96kHz24bit.flac.zip")
 	if err != nil {
 		t.Errorf("Error while downloading test file: %s", err.Error())
 		t.FailNow()
@@ -65,11 +76,6 @@ func TestVorbisFromExistingFlac(t *testing.T) {
 		}
 	}
 
-	if err := cmt.Add(FIELD_GENRE, "Bee Pop"); err != nil {
-		t.Error(err)
-		t.Fail()
-	}
-
 	check := func(cmt *MetaDataBlockVorbisComment) {
 		if cmt.Vendor != "reference libFLAC 1.2.1 win64 20080709" {
 			t.Errorf("Unexpected vendor string: %s\n", cmt.Vendor)
@@ -102,8 +108,8 @@ func TestVorbisFromExistingFlac(t *testing.T) {
 		if res, err := cmt.Get(FIELD_GENRE); err != nil {
 			t.Error(err)
 			t.Fail()
-		} else if len(res) != 1 || res[0] != "Bee Pop" {
-			t.Error("Unexpected title name: ", res)
+		} else if len(res) != 0 {
+			t.Error("Unexpected genre: ", res)
 			t.Fail()
 		}
 	}
@@ -114,5 +120,4 @@ func TestVorbisFromExistingFlac(t *testing.T) {
 		t.Fail()
 	}
 	check(new)
-
 }
