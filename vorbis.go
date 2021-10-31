@@ -25,7 +25,7 @@ func New() *MetaDataBlockVorbisComment {
 // empty list if the tag is not present. If there
 // is no tag, error would still be nil
 func (c *MetaDataBlockVorbisComment) Get(key string) ([]string, error) {
-	if value, exists := c.Comments[key]; exists {
+	if value, exists := c.Comments[strings.ToUpper(key)]; exists {
 		return value, nil
 	}
 	return []string{}, nil
@@ -33,27 +33,29 @@ func (c *MetaDataBlockVorbisComment) Get(key string) ([]string, error) {
 
 // Add adds a value to an existing tag, or sets the tag if not present
 func (c *MetaDataBlockVorbisComment) Add(key string, val string) error {
-	for _, char := range key {
+	stdKey := strings.ToUpper(key)
+	for _, char := range stdKey {
 		if char < 0x20 || char > 0x7d || char == '=' {
 			return ErrorInvalidFieldName
 		}
 	}
-	if xval, exists := c.Comments[key]; exists {
-		c.Comments[key] = append(xval, val)
+	if xval, exists := c.Comments[stdKey]; exists {
+		c.Comments[stdKey] = append(xval, val)
 	} else {
-		c.Comments[key] = []string{val}
+		c.Comments[stdKey] = []string{val}
 	}
 	return nil
 }
 
 // Sets sets a new tag or replaces replaces the value of a existing tag
 func (c *MetaDataBlockVorbisComment) Set(key string, val []string) error {
-	for _, char := range key {
+	stdKey := strings.ToUpper(key)
+	for _, char := range stdKey {
 		if char < 0x20 || char > 0x7d || char == '=' {
 			return ErrorInvalidFieldName
 		}
 	}
-	c.Comments[key] = val
+	c.Comments[stdKey] = val
 	return nil
 }
 

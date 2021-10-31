@@ -96,6 +96,22 @@ func TestVorbisFromExistingFlac(t *testing.T) {
 			t.Error("Unexpected artist name: ", res)
 			t.Fail()
 		}
+
+		if res, err := cmt.Get(FIELD_TITLE); err != nil {
+			t.Error(err)
+			t.Fail()
+		} else if len(res) != 1 || res[0] != "Bee Moved" {
+			t.Error("Unexpected title name: ", res)
+			t.Fail()
+		}
+
+		if res, err := cmt.Get(FIELD_GENRE); err != nil {
+			t.Error(err)
+			t.Fail()
+		} else if len(res) != 0 {
+			t.Error("Unexpected genre: ", res)
+			t.Fail()
+		}
 	}
 	check(cmt)
 	new, err := ParseFromMetaDataBlock(cmt.Marshal())
