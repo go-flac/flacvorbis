@@ -21,8 +21,9 @@ func New() *MetaDataBlockVorbisComment {
 	}
 }
 
-// Get get all comments with field name specified by the key parameter
-// If there is no match, error would still be nil
+// Gets the values of a tag if it exists, or an
+// empty list if the tag is not present. If there
+// is no tag, error would still be nil
 func (c *MetaDataBlockVorbisComment) Get(key string) ([]string, error) {
 	if value, exists := c.Comments[key]; exists {
 		return value, nil
@@ -30,7 +31,7 @@ func (c *MetaDataBlockVorbisComment) Get(key string) ([]string, error) {
 	return []string{}, nil
 }
 
-// Add adds a key-val pair to the comments
+// Add adds a value to an existing tag, or sets the tag if not present
 func (c *MetaDataBlockVorbisComment) Add(key string, val string) error {
 	for _, char := range key {
 		if char < 0x20 || char > 0x7d || char == '=' {
@@ -42,6 +43,17 @@ func (c *MetaDataBlockVorbisComment) Add(key string, val string) error {
 	} else {
 		c.Comments[key] = []string{val}
 	}
+	return nil
+}
+
+// Sets sets a new tag or replaces replaces the value of a existing tag
+func (c *MetaDataBlockVorbisComment) Set(key string, val []string) error {
+	for _, char := range key {
+		if char < 0x20 || char > 0x7d || char == '=' {
+			return ErrorInvalidFieldName
+		}
+	}
+	c.Comments[key] = val
 	return nil
 }
 
