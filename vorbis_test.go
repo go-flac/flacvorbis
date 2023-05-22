@@ -3,12 +3,25 @@ package flacvorbis
 import (
 	"archive/zip"
 	"bytes"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 	"strings"
 	"testing"
 
-	httpclient "github.com/ddliu/go-httpclient"
 	flac "github.com/go-flac/go-flac"
 )
+
+func httpGetBytes(url string) ([]byte, error) {
+	res, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	if res.StatusCode != 200 {
+		return nil, fmt.Errorf("HTTP status %d", res.StatusCode)
+	}
+	return ioutil.ReadAll(res.Body)
+}
 
 func TestNewVorbisComment(t *testing.T) {
 	cmt := New()
@@ -22,12 +35,7 @@ func TestNewVorbisComment(t *testing.T) {
 	}
 }
 func TestVorbisFromExistingFlac(t *testing.T) {
-	zipres, err := httpclient.Begin().Get("http://helpguide.sony.net/high-res/sample1/v1/data/Sample_BeeMoved_96kHz24bit.flac.zip")
-	if err != nil {
-		t.Errorf("Error while downloading test file: %s", err.Error())
-		t.FailNow()
-	}
-	zipdata, err := zipres.ReadAll()
+	zipdata, err := httpGetBytes("http://helpguide.sony.net/high-res/sample1/v1/data/Sample_BeeMoved_96kHz24bit.flac.zip")
 	if err != nil {
 		t.Errorf("Error while downloading test file: %s", err.Error())
 		t.FailNow()
