@@ -1,6 +1,6 @@
 # flacvorbis
 
-[![Documentation](https://godoc.org/github.com/go-flac/flacvorbis?status.svg)](https://godoc.org/github.com/go-flac/flacvorbis)
+[![Documentation](https://godoc.org/github.com/go-flac/flacvorbis?status.svg)](https://godoc.org/github.com/go-flac/flacvorbis/v2)
 [![Build Status](https://travis-ci.org/go-flac/flacvorbis.svg?branch=master)](https://travis-ci.org/go-flac/flacvorbis)
 [![Coverage Status](https://coveralls.io/repos/github/go-flac/flacvorbis/badge.svg?branch=master)](https://coveralls.io/github/go-flac/flacvorbis?branch=master)
 
@@ -13,8 +13,8 @@ The following example extracts existing tags from a FLAC file. It returns the la
 package example
 
 import (
-    "github.com/go-flac/flacvorbis"
-    "github.com/go-flac/go-flac"
+    "github.com/go-flac/flacvorbis/v2"
+    "github.com/go-flac/go-flac/v2"
 )
 
 func extractFLACComment(fileName string) (*flacvorbis.MetadataBlockVorbisComment, int) {
@@ -43,8 +43,8 @@ The following example adds a title to the FLAC metadata. It considers whether th
 package example
 
 import (
-    "github.com/go-flac/flacvorbis"
-    "github.com/go-flac/go-flac"
+    "github.com/go-flac/flacvorbis/v2"
+    "github.com/go-flac/go-flac/v2"
 )
 
 func addFLACTitle(fileName string, title []byte) {
